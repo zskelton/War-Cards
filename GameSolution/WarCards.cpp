@@ -1,14 +1,10 @@
 // WarCards.cpp : Defines the entry point for the application.
 //
 
-// HACK: Folder "../CardLib/cards16.lib" placed in directory
-// TODO: Fix this dependency.
 
 #include "framework.h"
 #include "WarCards.h"
 #include "CardLib.h"
-#include <windows.h>
-#include <tchar.h>
 
 #define MAX_LOADSTRING 100
 
