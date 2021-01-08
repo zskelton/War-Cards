@@ -1,9 +1,12 @@
 // WarCards.cpp : Defines the entry point for the application.
 //
 
+// HACK: Folder "../CardLib/cards16.lib" placed in directory
+// TODO: Fix this dependency.
+
 #include "framework.h"
 #include "WarCards.h"
-#include "CardLib/CardLib.h"
+#include "CardLib.h"
 #include <windows.h>
 #include <tchar.h>
 
@@ -13,7 +16,7 @@
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-//CardWindow cardwnd;
+CardWindow cardwnd;
 
 
 // Forward declarations of functions included in this code module:
@@ -130,10 +133,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
-    //case WM_CREATE:
-    //    {
-    //        cardwnd.Create(hWnd, WS_EX_CLIENTEDGE, WS_CHILD | WS_VISIBLE, 0, 0, 100, 100);
-    //    }
+    case WM_CREATE:
+        {
+            cardwnd.Create(hWnd, WS_EX_CLIENTEDGE, WS_CHILD | WS_VISIBLE, 0, 0, 100, 100);
+        }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
