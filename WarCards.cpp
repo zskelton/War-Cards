@@ -3,6 +3,7 @@
 
 #include "framework.h"
 #include "WarCards.h"
+#include "CardLib/CardLib.h"
 
 #define MAX_LOADSTRING 100
 
