@@ -13,6 +13,26 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 CardWindow cardwnd;
 
+// Create Game Method
+void createGame()
+{
+    CardStack stack;
+    Card c10 = Card(Ten, Clubs);
+
+    stack.Push(c10);
+
+    CardRegion* pRegion1;
+    CardRegion* pRegion2;
+
+    pRegion1 = cardwnd.CreateRegion(1, true, 10, 10, 20, 3);
+    pRegion2 = cardwnd.CreateRegion(2, true, 30, 10, 20, 3);
+
+    pRegion1->SetCardStack(stack);
+
+    cardwnd.Update();
+    cardwnd.Redraw();
+}
+
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -133,6 +153,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_CREATE:
         {
             cardwnd.Create(hWnd, WS_EX_CLIENTEDGE, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0);
+            createGame();
         }
     case WM_COMMAND:
         {
