@@ -255,6 +255,7 @@ void CardRegion::Clip(HDC hdc)
 void CardRegion::Render(HDC hdc)
 {
 	int cardnum = 0;
+	int counter = 0;
 	int numtodraw;
 	BOOL fDrawTips;
 	
@@ -272,7 +273,7 @@ void CardRegion::Render(HDC hdc)
 	
 	cardnum = cardstack.NumCards() - numtodraw;
 	
-	for(int counter = 0; counter < numtodraw; counter++)
+	for(counter = 0; counter < numtodraw; counter++)
 	{
 		int cardval;
 		
@@ -337,7 +338,6 @@ void CardRegion::Render(HDC hdc)
 		cardnum ++;
 
 	} //end of index
-	
 	if(counter == 0)	//if the cardstack is empty, then draw it that way
 	{
 		int x = xpos;

@@ -4,6 +4,8 @@
 #include "framework.h"
 #include "WarCards.h"
 #include "CardLib/CardLib.h"
+#include <windows.h>
+#include <tchar.h>
 
 #define MAX_LOADSTRING 100
 
@@ -128,6 +130,10 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message)
     {
+    //case WM_CREATE:
+    //    {
+    //        cardwnd.Create(hWnd, WS_EX_CLIENTEDGE, WS_CHILD | WS_VISIBLE, 0, 0, 100, 100);
+    //    }
     case WM_COMMAND:
         {
             int wmId = LOWORD(wParam);
