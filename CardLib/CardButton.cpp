@@ -4,6 +4,8 @@
 //	Freeware
 //	Copyright J Brown 2001
 //
+#pragma warning(disable: 4005)
+
 #include <windows.h>
 #include <tchar.h>
 

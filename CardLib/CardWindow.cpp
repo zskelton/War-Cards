@@ -217,7 +217,7 @@ void CardWindow::SetBackColor(COLORREF cr)
 		}
 	}
 
-	for(i = 0; i < nNumCardRegions; i++)
+	for(int i = 0; i < nNumCardRegions; i++)
 	{
 		Regions[i]->SetBackColor(crBackgnd);
 	}
@@ -632,10 +632,11 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
 	}
 
 	//if didn't find, return
+	int i = 0;
 	if(i == nNumCardRegions) return false;
 
 	//count the stacks that are visible
-	for(i = startindex; i < startindex + nNumStacks; i++)
+	for(int i = startindex; i < startindex + nNumStacks; i++)
 	{
 		if(Regions[i]->IsVisible())
 			numvisiblestacks++;
@@ -649,7 +650,7 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
 		viswidth += xSpacing * (numvisiblestacks - 1);
 		curx = -(viswidth  - __cardwidth) / 2;
 
-		for(i = startindex; i < startindex + nNumStacks; i++)
+		for(int i = startindex; i < startindex + nNumStacks; i++)
 		{
 			if(Regions[i]->IsVisible())
 			{
@@ -668,7 +669,7 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
 	
 	if(xJustify == CS_XJUST_NONE)
 	{
-		for(i = startindex; i < startindex + nNumStacks; i++)
+		for(int i = startindex; i < startindex + nNumStacks; i++)
 		{
 			if(Regions[i]->IsVisible())
 			{
