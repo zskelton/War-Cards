@@ -1,10 +1,9 @@
 // WarCards.cpp : Defines the entry point for the application.
 //
-
-
 #include "framework.h"
 #include "WarCards.h"
-#include "CardLib/CardLib.h"
+#include "../CardLib/CardLib.h"
+#include "../CardLib/DropZone.h"
 
 #define MAX_LOADSTRING 100
 
@@ -127,11 +126,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 //
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    int wWidth, wHeight;
+
     switch (message)
     {
     case WM_CREATE:
         {
-            cardwnd.Create(hWnd, WS_EX_CLIENTEDGE, WS_CHILD | WS_VISIBLE, 0, 0, 100, 100);
+            cardwnd.Create(hWnd, WS_EX_CLIENTEDGE, WS_CHILD | WS_VISIBLE, 0, 0, 0, 0);
         }
     case WM_COMMAND:
         {
@@ -156,6 +157,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             HDC hdc = BeginPaint(hWnd, &ps);
             // TODO: Add any drawing code that uses hdc here...
             EndPaint(hWnd, &ps);
+        }
+        break;
+    case WM_SIZE:
+        {
+            wWidth = LOWORD(lParam);
+            wHeight = HIWORD(lParam);
+
+            MoveWindow(cardwnd, 0, 0, wWidth, wHeight, TRUE);
         }
         break;
     case WM_DESTROY:
