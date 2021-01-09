@@ -56,18 +56,32 @@ void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
         Card pCard = player.Top();
         Card cCard = computer.Top();
         CardRegion* winner;
+        // TODO: MAKE WAR - FOR NOW, Solve by suit
         if (pCard.HiVal() >= cCard.HiVal()) {
             winner = player_earned;
         }
         else {
             winner = computer_earned;
         }
-        player_played->MoveCard(winner, 1, true);
-        computer_played->MoveCard(winner, 1, true);
-        // TODO: MAKE WAR - FOR NOW, Solve by suit
         // Move Both to $.Earned
+        player_played->MoveCard(winner, 1, true);
+        computer_played->MoveCard(winner, 1, true);        
         // Check Win
-        // Check Empty Deck
+        if ((player_ready->NumCards() + player_earned->NumCards()) == 56)
+        {
+            gameOn = false;
+            MessageBox(cardwnd, _T("Winner!"), _T("Winner"), MB_OK);
+        }
+        // Check Empty Deck for Player
+        if (player_ready->NumCards() == 0) {
+            player_earned->Shuffle();
+            player_earned->MoveCard(player_ready, player_earned->NumCards(), true);
+        }
+        // Check Empty Deck for Computer
+        if (computer_ready->NumCards() == 0) {
+            computer_earned->Shuffle();
+            computer_earned->MoveCard(computer_ready, computer_earned->NumCards(), true);
+        }
     }
 }
 
@@ -82,17 +96,17 @@ void createGame()
 
     //x 1. Start -> Click Deck
     //x    - then Split Deck to Two
-    // 2. AI Lays down Card
-    //    - then Player Clicks Card to Laydown
-    // 3. Highest Card Goes to {victor}.earned
-    //    - Check Win Condition
-    //       * Player or AI Cards + Earned == 0
+    //x 2. AI Lays down Card
+    //x    - then Player Clicks Card to Laydown
+    //x 3. Highest Card Goes to {victor}.earned
+    //x    - Check Win Condition
+    //x       * Player or AI Cards + Earned == 0
     //          + Win Graphics
-    //    - Check Reset Deck Condition
-    //       * Player/AI Cards == 0 and Earned > 0
-    //          + Shuffle Player/AI Cards :TODO: Set as Option
-    //          + Move Earned to Cards
-    //    - Goto #2
+    //x    - Check Reset Deck Condition
+    //x       * Player/AI Cards == 0 and Earned > 0
+    //x          + Shuffle Player/AI Cards :TODO: Set as Option
+    //x          + Move Earned to Cards
+    //x    - Goto #2
     //// TODO: Map out war.
 
     // Initialize Stacks
