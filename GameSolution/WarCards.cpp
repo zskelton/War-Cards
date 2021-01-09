@@ -3,9 +3,17 @@
 #include "framework.h"
 #include "WarCards.h"
 #include "../CardLib/CardLib.h"
-#include "../CardLib/DropZone.h"
 
 #define MAX_LOADSTRING 100
+
+// Defines for Slots
+#define DECK_SLOT 1
+#define PREADY_SLOT 2
+#define PPLAYED_SLOT 3
+#define PEARNED_SLOT 4
+#define CREADY_SLOT 5
+#define CPLAYED_SLOT 6
+#define CEARNED_SLOT 7
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -13,22 +21,81 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 CardWindow cardwnd;
 
+// Dealing Callback
+void CARDLIBPROC deal_deck(CardRegion& cardrgn, int iNumClicked)
+{
+    CardRegion* player_ready = cardwnd.CardRegionFromId(PREADY_SLOT);
+    CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
+    
+    cardrgn.MoveCard(player_ready, 26, true);
+    cardrgn.MoveCard(computer_ready, 26, true);
+
+    //CardStack deck = cardrgn.GetCardStack();
+    
+}
+
 // Create Game Method
 void createGame()
-{
-    CardStack stack;
-    Card c10 = Card(Ten, Clubs);
+{    
+    // Layout:
+    //          Deck (down)
+    //  P1 (d) Battle l/r (d)  AI (down)
+    //
+    //  P1.earned (Up)     AI.earned (Up)
 
-    stack.Push(c10);
+    // 1. Start -> Click Deck
+    //    - then Split Deck to Two
+    // 2. AI Lays down Card
+    //    - then Player Clicks Card to Laydown
+    // 3. Highest Card Goes to {victor}.earned
+    //    - Check Win Condition
+    //       * Player or AI Cards + Earned == 0
+    //          + Win Graphics
+    //    - Check Reset Deck Condition
+    //       * Player/AI Cards == 0 and Earned > 0
+    //          + Shuffle Player/AI Cards :TODO: Set as Option
+    //          + Move Earned to Cards
+    //    - Goto #2
+    //// TODO: Map out war.
 
-    CardRegion* pRegion1;
-    CardRegion* pRegion2;
+    // Initialize Stacks
+    CardStack deck;
+    CardStack playerReady;
+    CardStack playerEarned;
+    CardStack playerPlayed;
+    CardStack computerReady;
+    CardStack computerEarned;
+    CardStack computerPlayed;
 
-    pRegion1 = cardwnd.CreateRegion(1, true, 10, 10, 20, 3);
-    pRegion2 = cardwnd.CreateRegion(2, true, 30, 10, 20, 3);
+    // Initialize Slots for Stacks
+    CardRegion* start_deck = cardwnd.CreateRegion(DECK_SLOT,    true, 160,  10, 0, 0);
+    CardRegion* player_ready = cardwnd.CreateRegion(PREADY_SLOT,  true,  10, 110, 0, 0);
+    CardRegion* player_played = cardwnd.CreateRegion(PPLAYED_SLOT, true, 110, 110, 0, 0);
+    CardRegion* player_earned = cardwnd.CreateRegion(PEARNED_SLOT, true,  10, 210, 0, 0);
+    CardRegion* computer_ready = cardwnd.CreateRegion(CREADY_SLOT,  true, 310, 110, 0, 0);
+    CardRegion* computer_played = cardwnd.CreateRegion(CPLAYED_SLOT, true, 210, 110, 0, 0);
+    CardRegion* computer_earned = cardwnd.CreateRegion(CEARNED_SLOT, true, 310, 210, 0, 0);
 
-    pRegion1->SetCardStack(stack);
+    // Set Stack Properties
+    start_deck->SetFaceDirection(CS_FACE_DOWN, 0);
+    player_ready->SetFaceDirection(CS_FACE_DOWN, 0);
+    player_played->SetFaceDirection(CS_FACE_UP, 0);
+    player_earned->SetFaceDirection(CS_FACE_DOWN, 0);
+    computer_ready->SetFaceDirection(CS_FACE_DOWN, 0);
+    computer_played->SetFaceDirection(CS_FACE_UP, 0);
+    computer_earned->SetFaceDirection(CS_FACE_DOWN, 0);
 
+    // Fill Deck with Cards and Shuffle
+    deck.NewDeck();
+    deck.Shuffle();
+
+    // Place Deck on Start
+    start_deck->SetCardStack(deck);
+
+    
+    start_deck->SetClickProc(deal_deck);
+    
+    // Draw
     cardwnd.Update();
     cardwnd.Redraw();
 }
@@ -161,6 +228,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             // Parse the menu selections:
             switch (wmId)
             {
+            case IDM_NEWGAME:
+                createGame();
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;

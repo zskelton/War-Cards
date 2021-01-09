@@ -91,6 +91,7 @@ typedef void (CARDLIBPROC *pButtonProc)		(CardButton &pButton);
 #include "CardRegion.h"
 #include "CardCount.h"
 #include "CardWindow.h"
+#include "DropZone.h"
 
 #ifdef _DEBUG
 typedef bool (CARDLIBPROC *pDebugClickProc) (CardRegion &stackobj);
