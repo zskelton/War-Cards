@@ -20,18 +20,55 @@ HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 CardWindow cardwnd;
+bool gameOn = false;
 
 // Dealing Callback
 void CARDLIBPROC deal_deck(CardRegion& cardrgn, int iNumClicked)
 {
-    CardRegion* player_ready = cardwnd.CardRegionFromId(PREADY_SLOT);
-    CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
-    
-    cardrgn.MoveCard(player_ready, 26, true);
-    cardrgn.MoveCard(computer_ready, 26, true);
+    // Distribute in Two
+    cardrgn.MoveCard(cardwnd.CardRegionFromId(PREADY_SLOT), 26, true);
+    cardrgn.MoveCard(cardwnd.CardRegionFromId(CREADY_SLOT), 26, true);    
+    // Set Game to On
+    gameOn = true;
+}
 
-    //CardStack deck = cardrgn.GetCardStack();
-    
+// React to User Click
+void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
+{
+    // Pull Variables
+    CardRegion* start_deck = cardwnd.CardRegionFromId(DECK_SLOT);
+    CardRegion* player_ready = cardwnd.CardRegionFromId(PREADY_SLOT);
+    CardRegion* player_played = cardwnd.CardRegionFromId(PPLAYED_SLOT);
+    CardRegion* player_earned = cardwnd.CardRegionFromId(PEARNED_SLOT);
+    CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
+    CardRegion* computer_played = cardwnd.CardRegionFromId(CPLAYED_SLOT);
+    CardRegion* computer_earned = cardwnd.CardRegionFromId(CEARNED_SLOT);
+
+    if (gameOn)
+    {
+        // Move Player Card to Played
+        player_ready->MoveCard(player_played, 1, true);
+        // Move Computer Card to Played
+        computer_ready->MoveCard(computer_played, 1, true);
+        // Compare
+        CardStack player = player_played->GetCardStack();
+        CardStack computer = computer_played->GetCardStack();
+        Card pCard = player.Top();
+        Card cCard = computer.Top();
+        CardRegion* winner;
+        if (pCard.HiVal() >= cCard.HiVal()) {
+            winner = player_earned;
+        }
+        else {
+            winner = computer_earned;
+        }
+        player_played->MoveCard(winner, 1, true);
+        computer_played->MoveCard(winner, 1, true);
+        // TODO: MAKE WAR - FOR NOW, Solve by suit
+        // Move Both to $.Earned
+        // Check Win
+        // Check Empty Deck
+    }
 }
 
 // Create Game Method
@@ -43,8 +80,8 @@ void createGame()
     //
     //  P1.earned (Up)     AI.earned (Up)
 
-    // 1. Start -> Click Deck
-    //    - then Split Deck to Two
+    //x 1. Start -> Click Deck
+    //x    - then Split Deck to Two
     // 2. AI Lays down Card
     //    - then Player Clicks Card to Laydown
     // 3. Highest Card Goes to {victor}.earned
@@ -92,8 +129,11 @@ void createGame()
     // Place Deck on Start
     start_deck->SetCardStack(deck);
 
-    
+    // Set Events
+    // 1. Deal
     start_deck->SetClickProc(deal_deck);
+    // 2. React to User
+    player_ready->SetClickProc(play_card);
     
     // Draw
     cardwnd.Update();
