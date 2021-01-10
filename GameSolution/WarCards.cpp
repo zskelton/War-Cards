@@ -3,6 +3,7 @@
 #include "framework.h"
 #include "WarCards.h"
 #include "../CardLib/CardLib.h"
+#include <stdio.h>
 
 #define MAX_LOADSTRING 100
 
@@ -14,6 +15,9 @@
 #define CREADY_SLOT 5
 #define CPLAYED_SLOT 6
 #define CEARNED_SLOT 7
+#define PSCORE_LBL 8
+#define CSCORE_LBL 9
+#define WAR_LBL 10
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -44,18 +48,24 @@ void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
     CardRegion* computer_played = cardwnd.CardRegionFromId(CPLAYED_SLOT);
     CardRegion* computer_earned = cardwnd.CardRegionFromId(CEARNED_SLOT);
 
+    CardButton* lbl_player = cardwnd.CardButtonFromId(PSCORE_LBL);
+    CardButton* lbl_computer = cardwnd.CardButtonFromId(CSCORE_LBL);
+
     if (gameOn)
     {
         // Move Player Card to Played
         player_ready->MoveCard(player_played, 1, true);
+
         // Move Computer Card to Played
         computer_ready->MoveCard(computer_played, 1, true);
+
         // Compare
         CardStack player = player_played->GetCardStack();
         CardStack computer = computer_played->GetCardStack();
         Card pCard = player.Top();
         Card cCard = computer.Top();
         CardRegion* winner;
+
         // TODO: MAKE WAR - FOR NOW, Solve by suit
         if (pCard.HiVal() >= cCard.HiVal()) {
             winner = player_earned;
@@ -63,20 +73,34 @@ void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
         else {
             winner = computer_earned;
         }
+
         // Move Both to $.Earned
         player_played->MoveCard(winner, 1, true);
-        computer_played->MoveCard(winner, 1, true);        
+        computer_played->MoveCard(winner, 1, true);
+
+        // Show Score - Computer
+        TCHAR cscore[100];
+        sprintf_s(cscore, 100, "Computer: %i", (computer_ready->NumCards() + computer_earned->NumCards()));
+        lbl_computer->SetText(cscore);
+
+        // Show Score - Player
+        TCHAR pscore[100];
+        sprintf_s(pscore, 100, "Computer: %i", (player_ready->NumCards() + player_earned->NumCards()));
+        lbl_player->SetText(pscore);
+
         // Check Win
-        if ((player_ready->NumCards() + player_earned->NumCards()) == 56)
+        if ((player_ready->NumCards() + player_earned->NumCards()) == 52)
         {
             gameOn = false;
             MessageBox(cardwnd, _T("Winner!"), _T("Winner"), MB_OK);
         }
+
         // Check Empty Deck for Player
         if (player_ready->NumCards() == 0) {
             player_earned->Shuffle();
             player_earned->MoveCard(player_ready, player_earned->NumCards(), true);
         }
+
         // Check Empty Deck for Computer
         if (computer_ready->NumCards() == 0) {
             computer_earned->Shuffle();
@@ -87,28 +111,7 @@ void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
 
 // Create Game Method
 void createGame()
-{    
-    // Layout:
-    //          Deck (down)
-    //  P1 (d) Battle l/r (d)  AI (down)
-    //
-    //  P1.earned (Up)     AI.earned (Up)
-
-    //x 1. Start -> Click Deck
-    //x    - then Split Deck to Two
-    //x 2. AI Lays down Card
-    //x    - then Player Clicks Card to Laydown
-    //x 3. Highest Card Goes to {victor}.earned
-    //x    - Check Win Condition
-    //x       * Player or AI Cards + Earned == 0
-    //          + Win Graphics
-    //x    - Check Reset Deck Condition
-    //x       * Player/AI Cards == 0 and Earned > 0
-    //x          + Shuffle Player/AI Cards :TODO: Set as Option
-    //x          + Move Earned to Cards
-    //x    - Goto #2
-    //// TODO: Map out war.
-
+{   
     // Initialize Stacks
     CardStack deck;
     CardStack playerReady;
@@ -126,6 +129,11 @@ void createGame()
     CardRegion* computer_ready = cardwnd.CreateRegion(CREADY_SLOT,  true, 310, 110, 0, 0);
     CardRegion* computer_played = cardwnd.CreateRegion(CPLAYED_SLOT, true, 210, 110, 0, 0);
     CardRegion* computer_earned = cardwnd.CreateRegion(CEARNED_SLOT, true, 310, 210, 0, 0);
+
+    // Set Buttons
+    cardwnd.CreateButton(PSCORE_LBL, (TCHAR*)"Player: 0", CB_STATIC | CB_ALIGN_LEFT, true, 20, 410, 50, 25);
+    cardwnd.CreateButton(CSCORE_LBL, (TCHAR*)"Computer: 0", CB_STATIC | CB_ALIGN_RIGHT, true, 320, 410, 50, 25);
+    cardwnd.CreateButton(WAR_LBL, (TCHAR*)"", CB_STATIC | CB_ALIGN_CENTER, true, 160, 410, 50, 25);
 
     // Set Stack Properties
     start_deck->SetFaceDirection(CS_FACE_DOWN, 0);
