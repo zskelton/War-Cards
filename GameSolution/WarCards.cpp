@@ -17,9 +17,8 @@
 #define CEARNED_SLOT 7
 #define PSCORE_LBL 8
 #define CSCORE_LBL 9
-#define WAR_LBL 10
-#define PWAR_SLOT 11
-#define CWAR_SLOT 12
+#define PWAR_SLOT 10
+#define CWAR_SLOT 11
 
 // Defines for Returns
 #define PLAYER_WON 100
@@ -34,7 +33,7 @@ CardWindow cardwnd;
 bool gameOn = false;
 
 // Dealing Callback
-void CARDLIBPROC deal_deck(CardRegion& cardrgn, int iNumClicked)
+void CARDLIBPROC dealDeck(CardRegion& cardrgn, int iNumClicked)
 {
     if (!gameOn) {
         // Distribute in Two
@@ -46,14 +45,14 @@ void CARDLIBPROC deal_deck(CardRegion& cardrgn, int iNumClicked)
 }
 
 // Get Score Label
-TCHAR* setlabel(bool isPlayer, int score)
+TCHAR* setlabel(bool isPlayer, int score = 0)
 {
-    TCHAR* label = (TCHAR*)malloc(100 * sizeof(char));
+    _Post_ _Notnull_ TCHAR* label = (TCHAR*)malloc(100 * sizeof(TCHAR));
     if (isPlayer) {
-        sprintf_s(label, 100, "Player: %i", (score));
+        _stprintf_s(label, 100, "Player: %i", (score));
     }
     else {
-        sprintf_s(label, 100, "Computer: %i", (score));
+        _stprintf_s(label, 100, "Computer: %i", (score)); // FIXME: C6387 Error
     }
     return label;
 }
@@ -154,18 +153,15 @@ int playWar()
 }
 
 // React to User Click
-void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
+void CARDLIBPROC playCard(CardRegion& cardrgn, int iNumClicked)
 {
     // Pull Variables
-    CardRegion* start_deck = cardwnd.CardRegionFromId(DECK_SLOT);
     CardRegion* player_ready = cardwnd.CardRegionFromId(PREADY_SLOT);
     CardRegion* player_played = cardwnd.CardRegionFromId(PPLAYED_SLOT);
     CardRegion* player_earned = cardwnd.CardRegionFromId(PEARNED_SLOT);
     CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
     CardRegion* computer_played = cardwnd.CardRegionFromId(CPLAYED_SLOT);
     CardRegion* computer_earned = cardwnd.CardRegionFromId(CEARNED_SLOT);
-    CardRegion* player_war = cardwnd.CardRegionFromId(PWAR_SLOT);
-    CardRegion* computer_war = cardwnd.CardRegionFromId(CWAR_SLOT);
 
     CardButton* lbl_player = cardwnd.CardButtonFromId(PSCORE_LBL);
     CardButton* lbl_computer = cardwnd.CardButtonFromId(CSCORE_LBL);
@@ -247,9 +243,8 @@ void createGame()
     CardRegion* computer_war = cardwnd.CreateRegion(CWAR_SLOT, false, 210, 210, 0, 1);
 
     // Set Buttons
-    cardwnd.CreateButton(PSCORE_LBL, (TCHAR*)"Player: 0", CB_STATIC | CB_ALIGN_LEFT, true, 20, 410, 50, 25);
-    cardwnd.CreateButton(CSCORE_LBL, (TCHAR*)"Computer: 0", CB_STATIC | CB_ALIGN_RIGHT, true, 320, 410, 50, 25);
-    cardwnd.CreateButton(WAR_LBL, (TCHAR*)"", CB_STATIC | CB_ALIGN_CENTER, true, 160, 410, 50, 25);
+    cardwnd.CreateButton(PSCORE_LBL, (TCHAR*)"Player: 26", CB_STATIC | CB_ALIGN_LEFT, true, 20, 410, 50, 25);
+    cardwnd.CreateButton(CSCORE_LBL, (TCHAR*)"Computer: 26", CB_STATIC | CB_ALIGN_RIGHT, true, 320, 410, 50, 25);
 
     // Set Stack Properties
     start_deck->SetFaceDirection(CS_FACE_DOWN, 0);
@@ -269,9 +264,9 @@ void createGame()
 
     // Set Events
     // 1. Deal
-    start_deck->SetClickProc(deal_deck);
+    start_deck->SetClickProc(dealDeck);
     // 2. React to User
-    player_ready->SetClickProc(play_card);
+    player_ready->SetClickProc(playCard);
     
     // Draw
     cardwnd.Update();
