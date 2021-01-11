@@ -320,6 +320,7 @@ void createGame()
     cardwnd.Redraw();
 }
 
+////////////// WIN 32 API BELOW //////////////
 
 // Forward declarations of functions included in this code module:
 ATOM                MyRegisterClass(HINSTANCE hInstance);
@@ -338,7 +339,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     // TODO: Place code here.
 
     // Initialize global strings
-    LoadStringW(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
+    LoadStringW(hInstance, IDS_NEW_TITLE, szTitle, MAX_LOADSTRING); // FIXME: Title only displays one character.
     LoadStringW(hInstance, IDC_WARCARDS, szWindowClass, MAX_LOADSTRING);
     MyRegisterClass(hInstance);
 
@@ -364,8 +365,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 
     return (int) msg.wParam;
 }
-
-
 
 //
 //  FUNCTION: MyRegisterClass()
