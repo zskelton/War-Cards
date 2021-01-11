@@ -18,6 +18,13 @@
 #define PSCORE_LBL 8
 #define CSCORE_LBL 9
 #define WAR_LBL 10
+#define PWAR_SLOT 11
+#define CWAR_SLOT 12
+
+// Defines for Returns
+#define PLAYER_WON 100
+#define COMPUTER_WON 101
+#define TIED_CARDS 102
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -29,11 +36,121 @@ bool gameOn = false;
 // Dealing Callback
 void CARDLIBPROC deal_deck(CardRegion& cardrgn, int iNumClicked)
 {
-    // Distribute in Two
-    cardrgn.MoveCard(cardwnd.CardRegionFromId(PREADY_SLOT), 26, true);
-    cardrgn.MoveCard(cardwnd.CardRegionFromId(CREADY_SLOT), 26, true);    
-    // Set Game to On
-    gameOn = true;
+    if (!gameOn) {
+        // Distribute in Two
+        cardrgn.MoveCard(cardwnd.CardRegionFromId(PREADY_SLOT), 26, true);
+        cardrgn.MoveCard(cardwnd.CardRegionFromId(CREADY_SLOT), 26, true);
+        // Set Game to On
+        gameOn = true;
+    }
+}
+
+// Get Score Label
+TCHAR* setlabel(bool isPlayer, int score)
+{
+    TCHAR* label = (TCHAR*)malloc(100 * sizeof(char));
+    if (isPlayer) {
+        sprintf_s(label, 100, "Player: %i", (score));
+    }
+    else {
+        sprintf_s(label, 100, "Computer: %i", (score));
+    }
+    return label;
+}
+
+// Returns 0 - Tie, 1 - Player, 2 - Computer as Winner
+int getWinner(CardRegion* player_played, CardRegion* computer_played)
+{
+    // Compare
+    CardStack player = player_played->GetCardStack();
+    CardStack computer = computer_played->GetCardStack();
+    Card pCard = player.Top();
+    Card cCard = computer.Top();
+
+    if (pCard.HiVal() > cCard.HiVal()) {
+        return PLAYER_WON;
+    }
+    
+    if (cCard.HiVal() > pCard.HiVal()) {
+        return COMPUTER_WON;
+    }
+
+    return TIED_CARDS;
+}
+
+// Plays War on Ties
+int playWar()
+{
+    // Set Variables
+    int winner = TIED_CARDS;
+    bool inWar = true;
+    bool playerCanPlay = false;
+    bool computerCanPlay = false;
+
+    CardRegion* player_ready = cardwnd.CardRegionFromId(PREADY_SLOT);
+    CardRegion* player_played = cardwnd.CardRegionFromId(PPLAYED_SLOT);
+    CardRegion* player_earned = cardwnd.CardRegionFromId(PEARNED_SLOT);
+    CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
+    CardRegion* computer_played = cardwnd.CardRegionFromId(CPLAYED_SLOT);
+    CardRegion* computer_earned = cardwnd.CardRegionFromId(CEARNED_SLOT);
+    CardRegion* player_war = cardwnd.CardRegionFromId(PWAR_SLOT);
+    CardRegion* computer_war = cardwnd.CardRegionFromId(CWAR_SLOT);
+
+    // Loop Until War Complete
+    while (winner == TIED_CARDS) {
+        // Reset Checks
+        playerCanPlay = false;
+        computerCanPlay = false;
+        // Check Player Has Enough Cards and Play
+        if (player_ready->NumCards() > 4) {
+            playerCanPlay = true;
+        }
+        if (player_ready->NumCards() < 4 && player_earned->NumCards() > 4) {
+            player_earned->MoveCard(player_ready, player_earned->NumCards(), true);
+            player_ready->Shuffle();
+            playerCanPlay = true;
+        }
+        if (playerCanPlay) {
+            player_played->MoveCard(player_war, 1, true);
+            player_ready->MoveCard(player_war, 3, true);
+            player_ready->MoveCard(player_played, 1, true);
+        }
+        // Check Computer Has Enough Cards and Play
+        if (computer_ready->NumCards() > 4) {
+            computerCanPlay = true;
+        }
+        if (computer_ready->NumCards() < 4 && computer_earned->NumCards() > 4) {
+            computer_earned->MoveCard(computer_ready, computer_earned->NumCards(), true);
+            computer_ready->Shuffle();
+            computerCanPlay = true;
+        }
+        if (computerCanPlay) {
+            computer_played->MoveCard(computer_war, 1, true);
+            computer_ready->MoveCard(computer_war, 3, true);
+            computer_ready->MoveCard(computer_played, 1, true);
+        }
+
+        // If No one Can Play, give to Player by Default
+        if (!computerCanPlay && !playerCanPlay) {
+            winner = PLAYER_WON;
+        }
+
+        // Set New Winner and Exit if Not Tied
+        winner = getWinner(player_played, computer_played);
+    }
+
+    // Send War Cards to Winner
+    if (winner == PLAYER_WON) {
+        player_war->MoveCard(player_earned, player_war->NumCards(), true);
+        computer_war->MoveCard(player_earned, computer_war->NumCards(), true);
+    }
+    else {
+        player_war->MoveCard(computer_earned, player_war->NumCards(), true);
+        computer_war->MoveCard(computer_earned, computer_war->NumCards(), true);
+    }
+
+    // Return Final Winner
+    return winner;
 }
 
 // React to User Click
@@ -47,52 +164,49 @@ void CARDLIBPROC play_card(CardRegion& cardrgn, int iNumClicked)
     CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
     CardRegion* computer_played = cardwnd.CardRegionFromId(CPLAYED_SLOT);
     CardRegion* computer_earned = cardwnd.CardRegionFromId(CEARNED_SLOT);
+    CardRegion* player_war = cardwnd.CardRegionFromId(PWAR_SLOT);
+    CardRegion* computer_war = cardwnd.CardRegionFromId(CWAR_SLOT);
 
     CardButton* lbl_player = cardwnd.CardButtonFromId(PSCORE_LBL);
     CardButton* lbl_computer = cardwnd.CardButtonFromId(CSCORE_LBL);
 
     if (gameOn)
     {
-        // Move Player Card to Played
+        // Variables
+        bool inWar = false;
+        int winner;
+
+        // Complete First Round
         player_ready->MoveCard(player_played, 1, true);
-
-        // Move Computer Card to Played
         computer_ready->MoveCard(computer_played, 1, true);
+        winner = getWinner(player_played, computer_played);
 
-        // Compare
-        CardStack player = player_played->GetCardStack();
-        CardStack computer = computer_played->GetCardStack();
-        Card pCard = player.Top();
-        Card cCard = computer.Top();
-        CardRegion* winner;
+        // Play War if Tied
+        if (winner == TIED_CARDS) {
+            winner = playWar();
+        }
 
-        // TODO: MAKE WAR - FOR NOW, Solve by suit
-        if (pCard.HiVal() >= cCard.HiVal()) {
-            winner = player_earned;
+        // Move Played Card Based on Winner
+        if (winner == PLAYER_WON) {
+            player_played->MoveCard(player_earned, 1, true);
+            computer_played->MoveCard(player_earned, 1, true);
         }
         else {
-            winner = computer_earned;
+            player_played->MoveCard(computer_earned, 1, true);
+            computer_played->MoveCard(computer_earned, 1, true);
         }
 
-        // Move Both to $.Earned
-        player_played->MoveCard(winner, 1, true);
-        computer_played->MoveCard(winner, 1, true);
-
-        // Show Score - Computer
-        TCHAR cscore[100];
-        sprintf_s(cscore, 100, "Computer: %i", (computer_ready->NumCards() + computer_earned->NumCards()));
-        lbl_computer->SetText(cscore);
-
-        // Show Score - Player
-        TCHAR pscore[100];
-        sprintf_s(pscore, 100, "Computer: %i", (player_ready->NumCards() + player_earned->NumCards()));
-        lbl_player->SetText(pscore);
+        // Show Scores
+        lbl_computer->SetText(setlabel(false, (computer_ready->NumCards() + computer_earned->NumCards())));
+        lbl_player->SetText(setlabel(true, (player_ready->NumCards() + player_earned->NumCards())));
 
         // Check Win
         if ((player_ready->NumCards() + player_earned->NumCards()) == 52)
         {
             gameOn = false;
-            MessageBox(cardwnd, _T("Winner!"), _T("Winner"), MB_OK);
+            if (MessageBox(cardwnd, _T("Winner!"), _T("Winner"), MB_OK) == IDOK) {
+                cardwnd.DeleteAll();
+            }
         }
 
         // Check Empty Deck for Player
@@ -129,6 +243,8 @@ void createGame()
     CardRegion* computer_ready = cardwnd.CreateRegion(CREADY_SLOT,  true, 310, 110, 0, 0);
     CardRegion* computer_played = cardwnd.CreateRegion(CPLAYED_SLOT, true, 210, 110, 0, 0);
     CardRegion* computer_earned = cardwnd.CreateRegion(CEARNED_SLOT, true, 310, 210, 0, 0);
+    CardRegion* player_war = cardwnd.CreateRegion(PWAR_SLOT, false, 110, 210, 0, 1);
+    CardRegion* computer_war = cardwnd.CreateRegion(CWAR_SLOT, false, 210, 210, 0, 1);
 
     // Set Buttons
     cardwnd.CreateButton(PSCORE_LBL, (TCHAR*)"Player: 0", CB_STATIC | CB_ALIGN_LEFT, true, 20, 410, 50, 25);
@@ -291,6 +407,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             switch (wmId)
             {
             case IDM_NEWGAME:
+                cardwnd.DeleteAll();
+                gameOn = false;
                 createGame();
                 break;
             case IDM_ABOUT:
