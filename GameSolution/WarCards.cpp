@@ -24,6 +24,7 @@
 #define PLAYER_WON 100
 #define COMPUTER_WON 101
 #define TIED_CARDS 102
+#define NO_WIN 103
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
@@ -31,6 +32,10 @@ WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
 CardWindow cardwnd;
 bool gameOn = false;
+bool autoPlay = false;
+
+// Function Identifier
+void createGame();
 
 // Dealing Callback
 void CARDLIBPROC dealDeck(CardRegion& cardrgn, int iNumClicked)
@@ -152,6 +157,45 @@ int playWar()
     return winner;
 }
 
+// Check For Win
+int checkWin() {
+    CardRegion* player_ready = cardwnd.CardRegionFromId(PREADY_SLOT);
+    CardRegion* player_earned = cardwnd.CardRegionFromId(PEARNED_SLOT);
+    CardRegion* computer_ready = cardwnd.CardRegionFromId(CREADY_SLOT);
+    CardRegion* computer_earned = cardwnd.CardRegionFromId(CEARNED_SLOT);
+
+    // Get Totals
+    int cTotal = computer_ready->NumCards() + computer_earned->NumCards();
+    int pTotal = player_ready->NumCards() + player_earned->NumCards();
+
+    // Check for Winner
+    if (cTotal <= 0) {
+        return PLAYER_WON;
+    }
+
+    if (pTotal <= 0) {
+        return COMPUTER_WON;
+    }
+    
+    return NO_WIN;
+}
+
+// Handle Win Event
+void handleWin(int winner) {
+    _Post_ _Notnull_ TCHAR* result = (TCHAR*)malloc(100 * sizeof(TCHAR));
+    if (winner == PLAYER_WON) {
+        sprintf_s(result, 20, "You won!");
+    }
+    else {
+        sprintf_s(result, 20, "You lost."); // FIXME: Same C6387 Error on initializing TCHAR*
+    }
+    MessageBox(cardwnd, result, _T("Game Over!"), MB_OK);
+    autoPlay = false;
+    cardwnd.DeleteAll();
+    gameOn = false;
+    createGame();
+}
+
 // React to User Click
 void CARDLIBPROC playCard(CardRegion& cardrgn, int iNumClicked)
 {
@@ -197,12 +241,9 @@ void CARDLIBPROC playCard(CardRegion& cardrgn, int iNumClicked)
         lbl_player->SetText(setlabel(true, (player_ready->NumCards() + player_earned->NumCards())));
 
         // Check Win
-        if ((player_ready->NumCards() + player_earned->NumCards()) == 52)
-        {
-            gameOn = false;
-            if (MessageBox(cardwnd, _T("Winner!"), _T("Winner"), MB_OK) == IDOK) {
-                cardwnd.DeleteAll();
-            }
+        int res = checkWin();
+        if (res != NO_WIN) {
+            handleWin(res);
         }
 
         // Check Empty Deck for Player
@@ -217,6 +258,12 @@ void CARDLIBPROC playCard(CardRegion& cardrgn, int iNumClicked)
             computer_earned->MoveCard(computer_ready, computer_earned->NumCards(), true);
         }
     }
+
+    // Keep Playing, if Auto Play
+    // FIXME: Freezes when clicking the menu, otherwise works.
+    //if (autoPlay) {
+    //    playCard(cardrgn, iNumClicked);
+    //}
 }
 
 // Create Game Method
@@ -239,8 +286,8 @@ void createGame()
     CardRegion* computer_ready = cardwnd.CreateRegion(CREADY_SLOT,  true, 310, 110, 0, 0);
     CardRegion* computer_played = cardwnd.CreateRegion(CPLAYED_SLOT, true, 210, 110, 0, 0);
     CardRegion* computer_earned = cardwnd.CreateRegion(CEARNED_SLOT, true, 310, 210, 0, 0);
-    CardRegion* player_war = cardwnd.CreateRegion(PWAR_SLOT, false, 110, 210, 0, 1);
-    CardRegion* computer_war = cardwnd.CreateRegion(CWAR_SLOT, false, 210, 210, 0, 1);
+    CardRegion* player_war = cardwnd.CreateRegion(PWAR_SLOT, true, 110, 210, 0, 1);
+    CardRegion* computer_war = cardwnd.CreateRegion(CWAR_SLOT, true, 210, 210, 0, 1);
 
     // Set Buttons
     cardwnd.CreateButton(PSCORE_LBL, (TCHAR*)"Player: 26", CB_STATIC | CB_ALIGN_LEFT, true, 20, 410, 50, 25);
@@ -406,6 +453,15 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 gameOn = false;
                 createGame();
                 break;
+            case IDM_AUTOPLAY:
+                autoPlay = !autoPlay;
+                if (autoPlay) {
+                    CheckMenuItem(GetMenu(hWnd), IDM_AUTOPLAY, MF_CHECKED);
+                }
+                else {
+                    CheckMenuItem(GetMenu(hWnd), IDM_AUTOPLAY, MF_UNCHECKED);
+                }
+                break;
             case IDM_ABOUT:
                 DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hWnd, About);
                 break;
@@ -421,7 +477,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             PAINTSTRUCT ps;
             HDC hdc = BeginPaint(hWnd, &ps);
-            // TODO: Add any drawing code that uses hdc here...
             EndPaint(hWnd, &ps);
         }
         break;
